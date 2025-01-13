@@ -63,3 +63,11 @@ swag init --pd
 ```
 http://localhost:3001/project/docs
 ```
+
+## To Execute Frontend for Listing A Batch Logs
+
+- Just hit the below link
+
+```
+http://localhost:3001/
+```
