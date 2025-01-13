@@ -1,0 +1,10 @@
+# Environment file
+.env
+
+# swagger docs
+docs/*
+
+# build
+project
+.idea/
+*.log

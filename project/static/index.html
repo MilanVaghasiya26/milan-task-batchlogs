@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        input,
+        button {
+            margin: 10px 5px;
+            padding: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Logs Viewer</h2>
+    <label>Start Time:</label>
+    <input type="datetime-local" id="startTime">
+    <label>End Time:</label>
+    <input type="datetime-local" id="endTime">
+    <label>Search:</label>
+    <input type="text" id="searchText" placeholder="Enter log text, service, or severity">
+    <button onclick="fetchLogs()">Search Logs</button>
+    <table id="logsTable">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Severity</th>
+                <th>Service</th>
+                <th>Log Body</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <script>
+        async function fetchLogs() {
+            const start = document.getElementById("startTime").value;
+            const end = document.getElementById("endTime").value;
+            const searchText = document.getElementById("searchText").value;
+
+            const startTimestamp = start ? Math.floor(new Date(start).getTime() / 1000) : "";
+            const endTimestamp = end ? Math.floor(new Date(end).getTime() / 1000) : "";
+
+            let url = `/platform/api/v1/query?`;
+            if (startTimestamp) url += `start=${startTimestamp}&`;
+            if (endTimestamp) url += `end=${endTimestamp}&`;
+            if (searchText) url += `text=${encodeURIComponent(searchText)}`;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
+
+                const responseText = await response.text();
+                const jsonArrayMatch = responseText.match(/^\[.*?\](?=\{)/);
+                if (!jsonArrayMatch) throw new Error(`Unexpected response format: ${responseText}`);
+
+                const data = JSON.parse(jsonArrayMatch[0]);
+                if (!Array.isArray(data)) throw new Error("Invalid response format: Expected an array of logs");
+
+                const logs = data.filter(item => item.timestamp);
+                const tableBody = document.querySelector("#logsTable tbody");
+                tableBody.innerHTML = "";
+
+                if (logs.length === 0) {
+                    const row = tableBody.insertRow();
+                    row.insertCell(0).colSpan = 4;
+                    row.cells[0].textContent = "No logs found.";
+                    row.cells[0].style.textAlign = "center";
+                    return;
+                }
+
+                logs.forEach(log => {
+                    const row = tableBody.insertRow();
+                    row.insertCell(0).textContent = new Date(log.timestamp).toLocaleString();
+                    row.insertCell(1).textContent = log.severity || "N/A";
+                    row.insertCell(2).textContent = log.service || "N/A";
+                    row.insertCell(3).textContent = log.body || "N/A";
+                });
+
+            } catch (error) {
+                console.error("Error fetching logs:", error);
+                const tableBody = document.querySelector("#logsTable tbody");
+                tableBody.innerHTML = "";
+                const row = tableBody.insertRow();
+                row.insertCell(0).colSpan = 4;
+                row.cells[0].textContent = `Error fetching logs: ${error.message}`;
+                row.cells[0].style.textAlign = "center";
+                row.cells[0].style.color = "red";
+            }
+        }
+    </script>
+</body>
+
+</html>
