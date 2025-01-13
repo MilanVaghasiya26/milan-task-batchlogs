@@ -35,3 +35,9 @@
 - Go: (Golang)(https://golang.org/dl/) >= v1.21
 
 #### Project Setup
+
+1. Clone repo: `git clone git@github.com:MilanVaghasiya26/milan-task-batchlogs.git`
+2. Change directory to project: `cd project`
+3. Create Env file `cp .env.local .env`.
+4. Build Project `make build-project`
+5. Run binary `make run-project`
